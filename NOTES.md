@@ -102,3 +102,6 @@ import_issues. Full DDL in db/schema.sql.
 15 Sep - Signed up for Spectora, exported InterNACHI Residential template,
          committed the export. Analysed the file, documented six traps.
 16 Sep - Created Supabase project, ran schema, committed db/schema.sql.
+
+## Live URL
+https://YOUR-URL-HERE.vercel.app (Vercel, auto-deploys from main)
