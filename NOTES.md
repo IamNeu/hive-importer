@@ -179,8 +179,8 @@ is told rather than left to assume they came across.
 - Not tested against exports from other platforms.
 
 ## Time spent
-Roughly 10-12 hours across five days, including product exploration,
-file analysis, build, deployment and documentation.
+Roughly 12 hours across five days, covering product exploration, analysis of
+the Spectora export, schema design, the build, deployment and documentation.
 
 ## Credits
 - create-next-app (Next.js scaffold)
