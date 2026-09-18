@@ -102,6 +102,11 @@ import_issues. Full DDL in db/schema.sql.
 15 Sep - Signed up for Spectora, exported InterNACHI Residential template,
          committed the export. Analysed the file, documented six traps.
 16 Sep - Created Supabase project, ran schema, committed db/schema.sql.
+         Scaffolded the Next.js app and deployed an empty build to Vercel.
+17 Sep - Used Hive Inspect: template editor, import flow, and the demo
+         template. Notes in hive-feedback.md. No code written this day.
+18 Sep - Built the parser, import writer, editor UI, duplication and the
+         import-issues panel. Verified 392/392 comments imported.
 
 ## Live URL
 https://YOUR-URL-HERE.vercel.app (Vercel, auto-deploys from main)
