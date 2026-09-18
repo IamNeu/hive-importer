@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Spectora template importer
 
-## Getting Started
+Imports a Spectora HTML-text template export into a structured, editable
+database, so an inspection company moving off Spectora keeps the template
+they have spent years tuning.
 
-First, run the development server:
+Live: https://hive-importer.vercel.app
+
+## What it does
+
+- **Import** a Spectora "Export to spreadsheet - Export HTML Text" file.
+  Text, hierarchy and ordering are preserved. Anything skipped is recorded
+  and shown to the user, never silently dropped.
+- **Edit** section names, item names, comment names and comment bodies.
+  Changes save to Postgres.
+- **Copy** a whole template and edit the copy independently.
+- **Store** everything in Supabase (Postgres). Data survives restarts.
+
+## Stack
+
+Next.js (App Router, JavaScript) on Vercel, Supabase Postgres, SheetJS for
+parsing, Tailwind for styling. Frontend and API routes live in one project,
+so there is one deployment and no CORS configuration.
+
+## Setup
+
+```bash
+git clone https://github.com/IamNeu/hive-importer.git
+cd hive-importer
+npm install
+```
+
+### Database
+
+Create a Supabase project, open the SQL Editor, and run `db/schema.sql`.
+That creates six tables: `templates`, `sections`, `items`, `comments`,
+`import_runs`, `import_issues`.
+
+Row Level Security is not enabled. The app has no authentication, so there
+are no per-user rows to isolate.
+
+### Environment variables
+
+Create `.env.local`:
+
+Both come from the Supabase dashboard (Project Settings, API Keys and
+Data API). The same two variables must be set in Vercel for deployment.
+
+### Run
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Seed a template from the command line
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+```bash
+node scripts/seed.mjs
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Imports the committed export at
+`spectora-export/internachi-residential-2026-09-14.xls`.
 
-## Learn More
+### Verify an import
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+node scripts/test-parse.mjs
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Parses the committed export without writing to the database and prints the
+counts. Expect 13 sections, 69 items, 392 comments from 392 rows.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Input file
 
-## Deploy on Vercel
+`spectora-export/internachi-residential-2026-09-14.xls` — the InterNACHI
+Residential template from the Spectora Template Center, exported 14 Sep 2026.
+Note the file is named `.xls` but is really a modern XLSX; the parser reads
+the bytes rather than trusting the extension.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Notes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+See `NOTES.md` for what was cut and why, known limitations, how the import
+was verified, and the traps found in the export format.
