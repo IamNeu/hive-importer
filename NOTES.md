@@ -148,3 +148,46 @@ is told rather than left to assume they came across.
 ## Progress log addition
 18 Sep - Built parser and import writer. Verified 392/392 comments imported
          with hierarchy, ordering and entity decoding intact.
+
+## Deliberately cut
+- No rich-text editor. Comment HTML is edited in a plain textarea. A WYSIWYG
+  editor risks silently rewriting markup on save, which is the opposite of what
+  this customer needs. Showing the HTML is honest about what is stored.
+- No drag-to-reorder. Order is imported faithfully and stored as an integer
+  position; reordering is a next step, not a baseline requirement.
+- No auth. Not required by the brief, and it would have cost time better spent
+  on import fidelity.
+- No automated test suite. Verification was done by count queries against
+  Postgres and by spot-checking source_row_index against the spreadsheet.
+- Section- and item-level duplication (Hive has this). Only whole-template
+  duplication was required.
+- Default photos are parsed and reported but not imported.
+- Only Spectora is supported. Hive's importer asks the user to pick a source
+  platform first; extending this importer would mean a per-source parser behind
+  the same interface.
+
+## Known limitations
+- Supported input: Spectora "Export to spreadsheet - Export HTML Text", as
+  .xls or .xlsx. Required columns: Section Name, Item Name, Comment Name.
+- A file missing those columns is rejected with a message naming the missing
+  column. Nothing is written to the database on a failed import.
+- Rows with no section, item or comment name are skipped and recorded in
+  import_issues with their row number and full original row.
+- Comment HTML is stored as-is. Links, paragraphs and inline formatting are
+  preserved. No sanitisation is applied, which is acceptable for a
+  single-tenant tool but would need an allowlist before multi-tenant use.
+- Not tested against exports from other platforms.
+
+## Time spent
+Roughly 10-12 hours across five days, including product exploration,
+file analysis, build, deployment and documentation.
+
+## Credits
+- create-next-app (Next.js scaffold)
+- SheetJS (xlsx) for spreadsheet parsing, installed from the maintained CDN
+  build rather than the npm registry version, which carries an unpatched advisory
+- Supabase JS client
+- Tailwind CSS
+- Claude (Anthropic) used throughout for file analysis, schema design, code
+  generation and debugging. All output reviewed and tested against the real
+  export before committing.
