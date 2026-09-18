@@ -105,3 +105,46 @@ import_issues. Full DDL in db/schema.sql.
 
 ## Live URL
 https://YOUR-URL-HERE.vercel.app (Vercel, auto-deploys from main)
+
+## Importer
+
+The parser is deterministic — no model in the import path. A spreadsheet with
+fixed column headers does not need one, and a model could invent sections or
+drop rows, which is the exact failure this customer cannot tolerate. Validation
+is explicit: required columns are checked up front, and a file missing them is
+rejected with a message naming the missing column rather than importing
+partial garbage.
+
+How each trap is handled:
+1. .xls that is really xlsx — the file is read from its bytes via SheetJS, not
+   dispatched on its extension.
+2. Section/item order — rows are walked in file order and position is recorded
+   on first appearance. Nothing is sorted or keyed by name alone.
+3. Unreliable "Order (w/i item)" column — kept as source data, but position
+   within an item comes from arrival order. Rows with no order value are logged
+   as an info-level issue rather than silently renumbered.
+4. HTML entities — decoded on names and text (&amp;, &lt;, &gt;, &quot;,
+   &#39;, &nbsp;, U+00A0).
+5. Comments with no body — imported as normal rows with a null body. Only rows
+   missing a section, item or comment NAME are skipped, and each skip is
+   recorded in import_issues with its row number and full original row.
+6. Non-breaking spaces and CRLF — normalised in names; comment bodies are
+   stored as they came, so formatting is preserved.
+
+Default photo columns are detected but not imported. If a file contains them,
+the importer records a warning saying how many rows have photos, so the user
+is told rather than left to assume they came across.
+
+## How I checked my work
+- Parsed the committed export: 392 rows in, 392 comments out, 13 sections,
+  69 items — matching the counts found when the file was first analysed.
+- Verified in Postgres after import with a count query across all four tables.
+- Checked section order in the database matches the order in the spreadsheet.
+- Checked entity decoding: "Basement, Foundation, Crawlspace &amp; Structure"
+  is stored as "Basement, Foundation, Crawlspace & Structure".
+- Every comment carries source_row_index and raw_source, so any row in the app
+  can be traced back to its original spreadsheet row.
+
+## Progress log addition
+18 Sep - Built parser and import writer. Verified 392/392 comments imported
+         with hierarchy, ordering and entity decoding intact.
