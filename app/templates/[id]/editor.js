@@ -17,17 +17,29 @@ function Field({ value, onSave, className }) {
   }
 
   return (
-    <span className="inline-flex items-center gap-2 w-full">
-      <input value={v} onChange={e => setV(e.target.value)}
-        className={className + ' border rounded px-2 py-1 flex-1'} />
+    <span className="inline-flex items-center gap-2 flex-1 min-w-0">
+      <input
+        value={v}
+        onChange={e => setV(e.target.value)}
+        className={className + ' flex-1 min-w-0 bg-transparent rounded px-2 py-1 border border-transparent hover:border-gray-300 focus:border-blue-500 focus:bg-white focus:outline-none'}
+      />
       {dirty && (
         <button onClick={save} disabled={saving}
-          className="text-xs bg-blue-600 text-white px-2 py-1 rounded">
+          className="shrink-0 text-xs bg-blue-600 text-white px-2 py-1 rounded">
           {saving ? 'Saving...' : 'Save'}
         </button>
       )}
-      {saved && <span className="text-xs text-green-700">Saved</span>}
+      {saved && <span className="shrink-0 text-xs text-green-700">Saved</span>}
     </span>
+  )
+}
+
+function Toggle({ open, onClick }) {
+  return (
+    <button onClick={onClick}
+      className="shrink-0 w-5 h-5 flex items-center justify-center text-gray-400 hover:text-gray-700">
+      {open ? '\u2212' : '+'}
+    </button>
   )
 }
 
@@ -59,23 +71,22 @@ export default function TemplateEditor({ template, tree, counts, issues }) {
 
   return (
     <div>
-      <div className="flex items-start justify-between mt-3 mb-4 gap-4">
-        <div className="flex-1">
-          <Field value={template.name} className="text-xl font-semibold"
-            onSave={v => patch('templates', template.id, 'name', v)} />
-          <p className="text-sm text-gray-500 mt-1">
-            {counts.sections} sections, {counts.items} items, {counts.comments} comments
-            {template.source_filename ? ' - from ' + template.source_filename : ''}
-          </p>
-        </div>
+      <div className="flex items-start justify-between mt-4 mb-1 gap-4">
+        <Field value={template.name} className="text-2xl font-semibold tracking-tight"
+          onSave={v => patch('templates', template.id, 'name', v)} />
         <button onClick={duplicate} disabled={copying}
-          className="border rounded px-3 py-1.5 text-sm whitespace-nowrap">
+          className="shrink-0 border border-gray-300 rounded px-3 py-1.5 text-sm hover:bg-gray-50">
           {copying ? 'Copying...' : 'Duplicate template'}
         </button>
       </div>
 
+      <p className="text-sm text-gray-500 mb-5 px-2">
+        {counts.sections} sections &middot; {counts.items} items &middot; {counts.comments} comments
+        {template.source_filename ? ' \u00b7 from ' + template.source_filename : ''}
+      </p>
+
       {issues.length > 0 && (
-        <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded">
+        <div className="mb-5 p-3 bg-amber-50 border border-amber-200 rounded">
           <strong className="text-sm">{issues.length} import issue(s)</strong>
           <ul className="mt-1 text-sm list-disc pl-5">
             {issues.map(x => (
@@ -85,35 +96,36 @@ export default function TemplateEditor({ template, tree, counts, issues }) {
         </div>
       )}
 
-      <div className="border rounded divide-y">
+      <div className="border border-gray-200 rounded-lg divide-y divide-gray-100">
         {tree.map(s => (
-          <div key={s.id} className="p-3">
-            <div className="flex items-center gap-2">
-              <button onClick={() => setOpen(o => ({ ...o, [s.id]: !o[s.id] }))}
-                className="w-6 text-gray-500">{open[s.id] ? '-' : '+'}</button>
-              <Field value={s.name} className="font-medium"
+          <div key={s.id} className="py-2 px-3">
+            <div className="flex items-center gap-1">
+              <Toggle open={open[s.id]} onClick={() => setOpen(o => ({ ...o, [s.id]: !o[s.id] }))} />
+              <Field value={s.name} className="text-base font-semibold text-gray-900"
                 onSave={v => patch('sections', s.id, 'name', v)} />
+              <span className="shrink-0 text-xs text-gray-400 pr-1">{s.items.length}</span>
             </div>
 
             {open[s.id] && (
-              <div className="ml-8 mt-3 space-y-3">
+              <div className="ml-3 pl-4 mt-1 border-l border-gray-200">
                 {s.items.map(i => (
-                  <div key={i.id}>
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => setOpen(o => ({ ...o, [i.id]: !o[i.id] }))}
-                        className="w-6 text-gray-500">{open[i.id] ? '-' : '+'}</button>
-                      <Field value={i.name} className="text-sm"
+                  <div key={i.id} className="py-1">
+                    <div className="flex items-center gap-1">
+                      <Toggle open={open[i.id]} onClick={() => setOpen(o => ({ ...o, [i.id]: !o[i.id] }))} />
+                      <Field value={i.name} className="text-sm font-medium text-gray-800"
                         onSave={v => patch('items', i.id, 'name', v)} />
+                      <span className="shrink-0 text-xs text-gray-400 pr-1">{i.comments.length}</span>
                     </div>
 
                     {open[i.id] && (
-                      <div className="ml-8 mt-2 space-y-3">
+                      <div className="ml-3 pl-4 mt-1 border-l border-gray-200 space-y-3">
                         {i.comments.map(c => (
-                          <div key={c.id} className="border-l-2 pl-3">
-                            <Field value={c.name} className="text-sm"
+                          <div key={c.id} className="py-1">
+                            <Field value={c.name} className="text-sm text-gray-700"
                               onSave={v => patch('comments', c.id, 'name', v)} />
-                            <div className="text-xs text-gray-500 mt-1">
-                              {c.comment_type} - {c.answer_type} - source row {c.source_row_index}
+                            <div className="text-xs text-gray-400 px-2 mt-0.5">
+                              {[c.comment_type, c.answer_type].filter(Boolean).join(' \u00b7 ')}
+                              {' \u00b7 source row '}{c.source_row_index}
                             </div>
                             <CommentBody comment={c} onSave={v => patch('comments', c.id, 'body_html', v)} />
                           </div>
@@ -136,11 +148,17 @@ function CommentBody({ comment, onSave }) {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const dirty = v !== (comment.body_html ?? '')
+  const empty = !comment.body_html
 
   return (
-    <div className="mt-1">
-      <textarea value={v} onChange={e => setV(e.target.value)} rows={3}
-        className="w-full border rounded px-2 py-1 text-sm font-mono" />
+    <div className="mt-1 px-2">
+      <textarea
+        value={v}
+        onChange={e => setV(e.target.value)}
+        rows={empty ? 1 : 3}
+        placeholder={empty ? 'No comment text in the export' : ''}
+        className="w-full rounded px-2 py-1 text-xs font-mono bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:outline-none"
+      />
       {dirty && (
         <button onClick={async () => { setSaving(true); await onSave(v); setSaving(false); setSaved(true) }}
           disabled={saving} className="text-xs bg-blue-600 text-white px-2 py-1 rounded mt-1">
